@@ -26,6 +26,7 @@ def parse_raw(row):
     url = row[2]
 
     image = Image(title=title, description=description, url=url)
+    image.validate_and_cache()
 
     return image
 
@@ -40,13 +41,15 @@ def load_csv(request):
     datareader = csv.reader(io.TextIOWrapper(response), delimiter=",")
 
     # Parse each row
+    total_urls = 0
     num_images_added = 0
     for row in datareader:
+        total_urls += 1
         try:
             image = parse_raw(row)
             image.save()
             num_images_added += 1
         except Exception as e:
             logger.error("Impossible to load image: {0}".format(e))
-
-    return HttpResponse("Stored {0} images".format(str(num_images_added)))
+    logger.info("Images have been fetched: {0}/{1}.".format(num_images_added,total_urls))
+    return HttpResponse("Images fetched successfully: {0}/{1}.".format(num_images_added,total_urls))
