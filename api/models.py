@@ -29,23 +29,22 @@ class Image(models.Model):
 
     def validate_and_cache(self):
         if not self.title:
-            raise ValidationError('Enter a title for the image')
+            raise ValidationError('The image has no title, which is required')
         if not self.url:
-            raise ValidationError('Enter an URL for the image')
+            raise ValidationError('The URL field is empty.')
 
         # Check that the URL is valid
         val = URLValidator()
         try:
             val(self.url)
         except ValidationError as e:
-            raise ValidationError('Enter a valid URL')
+            raise ValidationError('The URL is not correctly formatted. Enter a valid URL')
 
         # Store the image in the server
         self.cache_image()
 
     def cache_image(self):
         img_temp = NamedTemporaryFile()
-        logger.info("Caching image: "+ self.url)
         response = urlopen(self.url)
         infor = response.info()
         header = dict(infor._headers)

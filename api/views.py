@@ -16,7 +16,7 @@ class ImageList(generics.ListCreateAPIView):
     serializer_class = ImageSerializer
 
 
-def parse_raw(row):
+def parse_row(row):
     if len(row) > 3:
         # TODO Throw exception
         return False
@@ -24,10 +24,15 @@ def parse_raw(row):
     title = row[0]
     description = row[1]
     url = row[2]
-
     image = Image(title=title, description=description, url=url)
-    image.validate_and_cache()
-
+    # Check if the image is already cached
+    results = Image.objects.filter(url=url)
+    if len(results) > 0:
+        logger.debug("Image already stored in cache")
+        image.image = results[0].image
+    else:
+        logger.debug("Trying to fetch image: " + url)
+        image.validate_and_cache()
     return image
 
 
@@ -46,7 +51,7 @@ def load_csv(request):
     for row in datareader:
         total_urls += 1
         try:
-            image = parse_raw(row)
+            image = parse_row(row)
             image.save()
             num_images_added += 1
         except Exception as e:
