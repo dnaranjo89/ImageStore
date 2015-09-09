@@ -33,10 +33,6 @@ def optimize(data):
 
 class Image(models.Model):
 
-    def __eq__(self, other):
-        if isinstance(other, Image):
-            return self.url == other.url and self.title == other.title and self.description == other.description
-        return NotImplemented
 
     def generate_path(instance, filename):
         # Get the plain filename and extension from the URL and append it to the static path
@@ -50,6 +46,12 @@ class Image(models.Model):
     description = models.TextField(null=True)
     url = models.URLField()
     image = models.ImageField(upload_to=generate_path)
+    csv_id = models.ForeignKey('CSVFile')
+
+    def __eq__(self, other):
+        if isinstance(other, Image):
+            return self.url == other.url and self.title == other.title and self.description == other.description
+        return NotImplemented
 
     def validate_and_cache(self):
         if not self.title:

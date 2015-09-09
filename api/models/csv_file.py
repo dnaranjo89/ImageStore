@@ -19,43 +19,38 @@ def calculate_hash(url):
         return md5_returned
 
 
-def parse_row(row):
-    if len(row) > 3:
-        # TODO Throw exception
-        return False
-
-    title = row[0]
-    description = row[1]
-    url = row[2]
-    image = Image.objects.get_or_create(title=title, description=description, url=url)
-    # Check if the image is already cached
-    results = Image.objects.filter(url=url)
-    if len(results) > 0:
-        logger.debug("Image already stored in cache")
-        image.image = results[0].image
-    else:
-        logger.debug("Trying to fetch image: " + url)
-        image.validate_and_cache()
-    return image
-
-
-def remove_unused_images(new_images):
-        stored_images = Image.objects.all()
-        for stored_image in stored_images:
-            if stored_image not in new_images:
-                stored_image.delete()
-
-
 class CSVFile(models.Model):
     url = models.URLField()
     hash = models.CharField(max_length=120)
-
 
     def generate_hash(self):
         self.hash = calculate_hash(self.url)
 
     def has_changed(self):
         return calculate_hash(self.url) != self.hash
+
+    def parse_row(self, row):
+        if len(row) < 3:
+            # TODO Throw exception
+            return False
+
+        title = row[0]
+        description = row[1]
+        url = row[2]
+        # Get the image from the database in case it exists. If not create an object
+        image = Image.objects.get_or_create(title=title, description=description, url=url, csv_id=self)[0]
+
+        # If the image is not in the DB yet, validate and cache it
+        if not image.image:
+            image.validate_and_cache()
+        return image
+
+    def remove_unused_images(self, new_images):
+        # Get the images stored referenced by the current CSV file
+        stored_images = Image.objects.filter(csv_id=self)
+        for stored_image in stored_images:
+            if stored_image not in new_images:
+                stored_image.delete()
 
     def load_csv(self):
         try:
@@ -72,12 +67,12 @@ class CSVFile(models.Model):
         for row in datareader:
             total_urls += 1
             try:
-                image = parse_row(row)
+                image = self.parse_row(row)
                 image.save()
                 new_images.append(image)
             except Exception as e:
                 logger.error("Impossible to load image: {0}".format(e))
         self.generate_hash()
-        remove_unused_images(new_images)
+        self.remove_unused_images(new_images)
         logger.info("Images have been fetched: {0}/{1}.".format(len(new_images), total_urls))
-        return HttpResponse("Images fetched successfully: {0}/{1}.".format(len(new_images), total_urls))
+
