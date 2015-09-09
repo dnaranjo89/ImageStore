@@ -52,5 +52,5 @@ def get_image_list(request, format="api"):
         if force_update is not None:
             check_updates()
         images = Image.objects.all()
-        serializer = ImageSerializer(images, many=True)
+        serializer = ImageSerializer(images, many=True, context={'request': request})
         return Response(serializer.data)
