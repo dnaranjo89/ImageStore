@@ -25,10 +25,9 @@ def check_updates():
             file.load_csv()
 
 
-def image_list_force_reload(request):
-    logger.info("show list")
+def image_list_force_reload(request,format):
     check_updates()
-    return redirect('image_list')
+    return redirect('image_list', format=format)
 
 
 class ImageList(generics.ListCreateAPIView):
