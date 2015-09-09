@@ -1,13 +1,10 @@
-import csv
-import io
 import logging
-import hashlib
 from django.http import HttpResponse
-from urllib.request import urlopen
 from django.shortcuts import redirect
 from rest_framework import generics
 from api.serializers import ImageSerializer
-from api.models import Image, CSVFile
+from api.models.csv_file import CSVFile
+from api.models.image import Image
 
 
 logger = logging.getLogger('imagestore')

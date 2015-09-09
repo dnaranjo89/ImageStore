@@ -1,6 +1,6 @@
 from django.test import TestCase
 from nose.tools import raises
-from api.models import CSVFile
+from api.models.csv_file import CSVFile
 
 class CSVTest(TestCase):
 

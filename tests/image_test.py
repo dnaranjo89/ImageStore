@@ -1,6 +1,6 @@
 from django.test import TestCase
 from nose.tools import assert_raises, raises
-from api.models import Image
+from api.models.image import Image
 import django
 from django.core.exceptions import ValidationError
 

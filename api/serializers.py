@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import Image
+from api.models.image import Image
 
 
 class ImageSerializer(serializers.HyperlinkedModelSerializer):
