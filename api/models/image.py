@@ -79,7 +79,7 @@ class Image(models.Model):
         if 'image' not in type:
             raise ValidationError("The URL does not contains any image. (Content-Type: {0})".format(type))
         source_data = response.read()
-        #source_data = optimize(source_data)
+        source_data = optimize(source_data)
         img_temp.write(source_data)
         img_temp.flush()
 
