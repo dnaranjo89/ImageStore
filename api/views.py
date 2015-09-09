@@ -10,17 +10,24 @@ from api.models.image import Image
 logger = logging.getLogger('imagestore')
 
 
-def populate(request):
-    csv_file2 = CSVFile.objects.get_or_create(url="https://docs.google.com/spreadsheets/d/1cvSn15RCK8n-A-284FSquBxMd7GHsY9H2ysXMt6QUZc/export?format=csv&id=1cvSn15RCK8n-A-284FSquBxMd7GHsY9H2ysXMt6QUZc")[0]
-    csv_file = CSVFile.objects.get_or_create(url="https://docs.google.com/spreadsheets/d/1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM/export?format=csv&id=1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM")[0]
+def add_csv_file(url):
+    """ Create a CSVFile object load its content and store everything in the DB """
+    csv_file = CSVFile.objects.get_or_create(url=url)[0]
     # Save to generate an ID
     csv_file.save()
+    # Load and store the images contained in the CSV file
     csv_file.load_csv()
+    # Save to store the hash of the file
     csv_file.save()
 
-    csv_file2.save()
-    csv_file2.load_csv()
-    csv_file2.save()
+
+def populate(request):
+    csv_file_urls = [
+        "https://docs.google.com/spreadsheets/d/1cvSn15RCK8n-A-284FSquBxMd7GHsY9H2ysXMt6QUZc/export?format=csv&id=1cvSn15RCK8n-A-284FSquBxMd7GHsY9H2ysXMt6QUZc",
+        "https://docs.google.com/spreadsheets/d/1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM/export?format=csv&id=1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM",
+    ]
+    for url in csv_file_urls:
+        add_csv_file(url)
     return HttpResponse("ok")
 
 
@@ -30,6 +37,7 @@ def check_updates():
     csv_files = CSVFile.objects.all()
     for file in csv_files:
         if file.has_changed():
+            logger.info("The following file has changed since last time. Fetching changes. (URL: {0})".format(file.url))
             new_images = file.load_csv()
             stored_images.append(new_images)
 
