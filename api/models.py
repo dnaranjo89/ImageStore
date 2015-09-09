@@ -54,7 +54,10 @@ class CSVFile(models.Model):
         return image
 
     def load_csv(self):
-        response = urlopen(self.url)
+        try:
+            response = urlopen(self.url)
+        except Exception:
+            raise Exception("Imposible to load the image store: {0}".format(self.url))
         #TODO check if the CSV file has a header
         next(response)  # skip header row
         datareader = csv.reader(io.TextIOWrapper(response), delimiter=",")
