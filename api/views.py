@@ -22,6 +22,8 @@ def add_csv_file(url):
 
 
 def populate(request):
+    """ Load the CSV files and the images that they reference and store them in the DB. """
+    logger.debug("Load CSV files")
     csv_file_urls = [
         "https://docs.google.com/spreadsheets/d/1cvSn15RCK8n-A-284FSquBxMd7GHsY9H2ysXMt6QUZc/export?format=csv&id=1cvSn15RCK8n-A-284FSquBxMd7GHsY9H2ysXMt6QUZc",
         "https://docs.google.com/spreadsheets/d/1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM/export?format=csv&id=1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM",
@@ -43,7 +45,7 @@ def check_updates():
 
 
 @api_view(['GET', ])
-def get_image_list(request, format):
+def get_image_list(request, format="api"):
     if request.method == 'GET':
         # If the URL contains the parameter 'f', the sources will be checked for changes
         force_update = request.GET.get("f")

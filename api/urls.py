@@ -5,7 +5,7 @@ from api import views
 
 urlpatterns = patterns(
     '',
-    url(r'^get_images$', views.get_image_list),
+    url(r'^images/$', views.get_image_list),
     url(r'^populate$', views.populate),
     url(r'^media/(?P<path>.*)$', 'django.views.static.serve', {
         'document_root': settings.MEDIA_ROOT,
