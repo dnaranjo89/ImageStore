@@ -37,7 +37,8 @@ def parse_row(row):
 
 
 def load_csv(request):
-    url = "https://docs.google.com/spreadsheets/d/19CtR3Wuszozzpj2hj4lmcYpMPK9_c2Y9FQQsFigggeU/export?format=csv&id=19CtR3Wuszozzpj2hj4lmcYpMPK9_c2Y9FQQsFigggeU"
+    #url = "https://docs.google.com/spreadsheets/d/19CtR3Wuszozzpj2hj4lmcYpMPK9_c2Y9FQQsFigggeU/export?format=csv&id=19CtR3Wuszozzpj2hj4lmcYpMPK9_c2Y9FQQsFigggeU"
+    url = "https://docs.google.com/spreadsheets/d/1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM/export?format=csv&id=1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM"
     response = urlopen(url)
 
     logger.info("start")
