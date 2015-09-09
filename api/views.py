@@ -1,61 +1,40 @@
 import csv
 import io
 import logging
+import hashlib
 from django.http import HttpResponse
 from urllib.request import urlopen
+from django.shortcuts import redirect
 from rest_framework import generics
 from api.serializers import ImageSerializer
-from api.models import Image
+from api.models import Image, CSVFile
 
 
 logger = logging.getLogger('imagestore')
 
 
+def populate(request):
+    csv_file = CSVFile(url="https://docs.google.com/spreadsheets/d/1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM/export?format=csv&id=1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM")
+    csv_file.load_csv()
+    csv_file.save()
+    return HttpResponse("ok")
+
+
+def check_updates():
+    logger.info("check updates")
+    csv_files = CSVFile.objects.all()
+    for file in csv_files:
+        if file.has_changed():
+            file.load_csv()
+
+
+def image_list_force_reload(request):
+    logger.info("show list")
+    check_updates()
+    return redirect('image_list')
+
+
 class ImageList(generics.ListCreateAPIView):
+    # TODO Add decorator to check updates
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
-
-
-def parse_row(row):
-    if len(row) > 3:
-        # TODO Throw exception
-        return False
-
-    title = row[0]
-    description = row[1]
-    url = row[2]
-    image = Image(title=title, description=description, url=url)
-    # Check if the image is already cached
-    results = Image.objects.filter(url=url)
-    if len(results) > 0:
-        logger.debug("Image already stored in cache")
-        image.image = results[0].image
-    else:
-        logger.debug("Trying to fetch image: " + url)
-        image.validate_and_cache()
-    return image
-
-
-def load_csv(request):
-    #url = "https://docs.google.com/spreadsheets/d/19CtR3Wuszozzpj2hj4lmcYpMPK9_c2Y9FQQsFigggeU/export?format=csv&id=19CtR3Wuszozzpj2hj4lmcYpMPK9_c2Y9FQQsFigggeU"
-    url = "https://docs.google.com/spreadsheets/d/1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM/export?format=csv&id=1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM"
-    response = urlopen(url)
-
-    logger.info("start")
-    #TODO check if the CSV file has a header
-    next(response)  # skip header row
-    datareader = csv.reader(io.TextIOWrapper(response), delimiter=",")
-
-    # Parse each row
-    total_urls = 0
-    num_images_added = 0
-    for row in datareader:
-        total_urls += 1
-        try:
-            image = parse_row(row)
-            image.save()
-            num_images_added += 1
-        except Exception as e:
-            logger.error("Impossible to load image: {0}".format(e))
-    logger.info("Images have been fetched: {0}/{1}.".format(num_images_added,total_urls))
-    return HttpResponse("Images fetched successfully: {0}/{1}.".format(num_images_added,total_urls))
