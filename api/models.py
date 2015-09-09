@@ -6,7 +6,7 @@ from django.db import models
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from django.core.files import File
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 from tempfile import NamedTemporaryFile
 
 
@@ -45,7 +45,9 @@ class Image(models.Model):
 
     def cache_image(self):
         img_temp = NamedTemporaryFile()
-        response = urlopen(self.url)
+        # Header required for HTTPS connections
+        request = Request(self.url, headers={'User-Agent': ''})
+        response = urlopen(request)
         infor = response.info()
         header = dict(infor._headers)
         type = header['Content-Type']
