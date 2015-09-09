@@ -1,7 +1,7 @@
 import logging
 from django.http import HttpResponse
-from django.shortcuts import redirect
-from rest_framework import generics
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from api.serializers import ImageSerializer
 from api.models.csv_file import CSVFile
 from api.models.image import Image
@@ -34,12 +34,13 @@ def check_updates():
             stored_images.append(new_images)
 
 
-def image_list_force_reload(request,format):
-    check_updates()
-    return redirect('image_list', format=format)
-
-
-class ImageList(generics.ListCreateAPIView):
-    # TODO Add decorator to check updates
-    queryset = Image.objects.all()
-    serializer_class = ImageSerializer
+@api_view(['GET', ])
+def get_image_list(request, format):
+    if request.method == 'GET':
+        # If the URL contains the parameter 'f', the sources will be checked for changes
+        force_update = request.GET.get("f")
+        if force_update is not None:
+            check_updates()
+        images = Image.objects.all()
+        serializer = ImageSerializer(images, many=True)
+        return Response(serializer.data)

@@ -33,7 +33,6 @@ def optimize(data):
 
 class Image(models.Model):
 
-
     def generate_path(instance, filename):
         # Get the plain filename and extension from the URL and append it to the static path
         path = "images/"
