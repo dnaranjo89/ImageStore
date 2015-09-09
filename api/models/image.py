@@ -9,7 +9,27 @@ from django.core.files import File
 from urllib.request import urlopen, Request
 from tempfile import NamedTemporaryFile
 
+import tinify
+
+tinify.key = "kqsvwgRVhpnG2DJNTIOJxVYVOmrBE08z"
 logger = logging.getLogger('imagestore')
+
+
+def optimize(data):
+    try:
+        optimized_data = tinify.from_buffer(data).to_buffer()
+        return optimized_data
+    except tinify.AccountError as e:
+        # This exception may rise, since a Free account is being used (only 500 requests/month)
+        logger.error("There is a problem with the TinyPNG Account: {0}".format(e))
+        return data
+    except tinify.ServerError as e:
+        logger.error("There seem to be problems in the compression server: {0}".format(e))
+        return data
+    except Exception as e:
+        logger.error("The image could not be compressed: {0}".format(e))
+        return data
+
 
 class Image(models.Model):
     def generate_path(instance, filename):
@@ -51,7 +71,9 @@ class Image(models.Model):
         type = header['Content-Type']
         if 'image' not in type:
             raise ValidationError("The URL does not contains any image. (Content-Type: {0})".format(type))
-        img_temp.write(response.read())
+        source_data = response.read()
+        #source_data = optimize(source_data)
+        img_temp.write(source_data)
         img_temp.flush()
 
         self.image.save(self.url, File(img_temp))
