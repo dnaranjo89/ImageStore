@@ -15,7 +15,6 @@ def calculate_hash(url):
         data = file_to_check.read()
         # pipe contents of the file through
         md5_returned = hashlib.md5(data).hexdigest()
-        logger.error("MD5 ------------> " + str(md5_returned))
         return md5_returned
 
 
@@ -56,7 +55,7 @@ class CSVFile(models.Model):
         try:
             response = urlopen(self.url)
         except Exception:
-            raise Exception("Imposible to load the image store: {0}".format(self.url))
+            raise Exception("Imposible to load the CSV file: {0}".format(self.url))
         #TODO check if the CSV file has a header
         next(response)  # skip header row
         datareader = csv.reader(io.TextIOWrapper(response), delimiter=",")
