@@ -33,12 +33,9 @@ def optimize(data):
 
 class Image(models.Model):
 
-    def generate_path(instance, filename):
-        # Get the plain filename and extension from the URL and append it to the static path
+    def generate_path(self, url):
         path = "images/"
-        url = urlparse(filename)
-        filename, file_ext = splitext(basename(url.path))
-        full_path = os.path.join(path, filename + file_ext)
+        full_path = os.path.join(path, self.filename)
         return full_path
 
     title = models.CharField(max_length=120)
@@ -46,6 +43,8 @@ class Image(models.Model):
     url = models.URLField()
     image = models.ImageField(upload_to=generate_path)
     csv_id = models.ForeignKey('CSVFile')
+
+    filename = ""
 
     def __eq__(self, other):
         if isinstance(other, Image):
@@ -73,11 +72,16 @@ class Image(models.Model):
         # Header required for HTTPS connections
         request = Request(self.url, headers={'User-Agent': ''})
         response = urlopen(request)
-        infor = response.info()
-        header = dict(infor._headers)
-        type = header['Content-Type']
-        if 'image' not in type:
+        type_file = dict(response.info()._headers)['Content-Type']
+        if 'image' not in type_file:
             raise ValidationError("The URL does not contains any image. (Content-Type: {0})".format(type))
+        # Store the filename with extension
+        url_image = urlparse(self.url)
+        filename, file_ext = splitext(basename(url_image.path))
+        # If the file doesn't have a extension, find it out from the header
+        if file_ext == '':
+            file_ext = type_file.replace('image/', '')
+        self.filename = filename + file_ext
         source_data = response.read()
         source_data = optimize(source_data)
         img_temp.write(source_data)

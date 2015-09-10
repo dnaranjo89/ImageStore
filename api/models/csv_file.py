@@ -57,21 +57,25 @@ class CSVFile(models.Model):
         except Exception:
             raise Exception("Imposible to load the CSV file: {0}".format(self.url))
         #TODO check if the CSV file has a header
-        next(response)  # skip header row
-        datareader = csv.reader(io.TextIOWrapper(response), delimiter=",")
+        try:
+            next(response)  # skip header row
+            datareader = csv.reader(io.TextIOWrapper(response), delimiter=",")
 
-        # Parse each row
-        new_images = []
-        total_urls = 0
-        for row in datareader:
-            total_urls += 1
-            try:
-                image = self.parse_row(row)
-                image.save()
-                new_images.append(image)
-            except Exception as e:
-                logger.error("Impossible to load image: {0}".format(e))
-        self.generate_hash()
-        self.remove_unused_images(new_images)
-        logger.info("Images have been fetched: {0}/{1}.".format(len(new_images), total_urls))
+            # Parse each row
+            new_images = []
+            total_urls = 0
+            for row in datareader:
+                total_urls += 1
+                try:
+                    image = self.parse_row(row)
+                    image.save()
+                    new_images.append(image)
+                except Exception as e:
+                    logger.error("Impossible to load image: {0}".format(e))
+            self.generate_hash()
+            self.remove_unused_images(new_images)
+            logger.info("Images have been fetched: {0}/{1}.".format(len(new_images), total_urls))
+        except StopIteration:
+            logger.error("Couldn't load the CSV file. The file it's empty. (URL: {0}".format(self.url))
+
 
