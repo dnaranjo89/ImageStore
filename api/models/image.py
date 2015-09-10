@@ -2,21 +2,23 @@ import logging
 import os
 from os.path import splitext, basename
 from urllib.parse import urlparse
+from urllib.request import urlopen, Request
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from django.core.files import File
-from urllib.request import urlopen, Request
 from tempfile import NamedTemporaryFile
 import tinify
 
-tinify.key = "kqsvwgRVhpnG2DJNTIOJxVYVOmrBE08z"
 logger = logging.getLogger('imagestore')
+tinify.key = "kqsvwgRVhpnG2DJNTIOJxVYVOmrBE08z"
+""" API key to compress images """
 
 
 def optimize(data):
+    """ Compress an image using the API offered by TinyPNG """
     try:
         optimized_data = tinify.from_buffer(data).to_buffer()
         return optimized_data
@@ -32,6 +34,7 @@ def optimize(data):
 
 
 class Image(models.Model):
+    """ Stores the details of an image. Enable compression and cache """
 
     def generate_path(self, url):
         path = "images/"
@@ -52,6 +55,10 @@ class Image(models.Model):
         return NotImplemented
 
     def validate_and_cache(self):
+        """
+        Validate the fields to build an Image instance.
+        If the object pass the validation, the image is downloaded and cached.
+        """
         if not self.title:
             raise ValidationError('The image has no title, which is required')
         if not self.url:
@@ -68,6 +75,7 @@ class Image(models.Model):
         self.cache_image()
 
     def cache_image(self):
+        """ Download the image from the URL, compress it and store it in the server """
         img_temp = NamedTemporaryFile()
         # Header required for HTTPS connections
         request = Request(self.url, headers={'User-Agent': ''})
@@ -89,6 +97,7 @@ class Image(models.Model):
         img_temp.flush()
         # Save the image in the server
         self.image  .save(self.url, File(img_temp))
+
 
 @receiver(pre_delete, sender=Image)
 def remove_image_file(sender, instance, **kwargs):
