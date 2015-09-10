@@ -3,12 +3,13 @@ import os
 from os.path import splitext, basename
 from urllib.parse import urlparse
 from django.db import models
+from django.db.models.signals import pre_delete
+from django.dispatch.dispatcher import receiver
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from django.core.files import File
 from urllib.request import urlopen, Request
 from tempfile import NamedTemporaryFile
-
 import tinify
 
 tinify.key = "kqsvwgRVhpnG2DJNTIOJxVYVOmrBE08z"
@@ -87,4 +88,10 @@ class Image(models.Model):
         img_temp.write(source_data)
         img_temp.flush()
         # Save the image in the server
-        self.image.save(self.url, File(img_temp))
+        self.image  .save(self.url, File(img_temp))
+
+@receiver(pre_delete, sender=Image)
+def remove_image_file(sender, instance, **kwargs):
+    """ Remove the image file when the instance is deleted from the DB """
+    # Pass false so ImageField doesn't save the model.
+    instance.image.delete(False)
