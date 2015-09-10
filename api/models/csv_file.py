@@ -6,6 +6,7 @@ from urllib.error import URLError
 from urllib.request import urlopen
 
 from django.db import models
+from django.contrib import admin
 from rest_framework.exceptions import ValidationError
 
 from api.models.image import Image
@@ -32,7 +33,7 @@ class CSVFile(models.Model):
     Allows to parses a CSV file and download, compress and cache its content
     """
     url = models.URLField()
-    hash = models.CharField(max_length=120)
+    hash = models.CharField(max_length=35, null=True, blank=True)
 
     def __str__(self):
         return self.url
@@ -104,3 +105,10 @@ class CSVFile(models.Model):
             logger.info("Images have been fetched: {0}/{1}.".format(len(new_images), total_urls))
             # Save to store the hash of the file
             self.save()
+
+
+class CSVFileAdmin(admin.ModelAdmin):
+    def get_form(self, request, obj=None, **kwargs):
+        self.exclude = ("hash", )
+        form = super(CSVFileAdmin, self).get_form(request, obj, **kwargs)
+        return form

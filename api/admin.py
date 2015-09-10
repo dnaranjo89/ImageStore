@@ -1,4 +1,4 @@
 from django.contrib import admin
-from api.models import CSVFile
+from api.models.csv_file import CSVFile, CSVFileAdmin
 
-admin.site.register(CSVFile)
+admin.site.register(CSVFile, CSVFileAdmin)
