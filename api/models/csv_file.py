@@ -24,6 +24,9 @@ class CSVFile(models.Model):
     url = models.URLField()
     hash = models.CharField(max_length=120)
 
+    def __str__(self):
+        return self.url
+
     def generate_hash(self):
         self.hash = calculate_hash(self.url)
 
