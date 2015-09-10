@@ -3,13 +3,14 @@ import os
 from os.path import splitext, basename
 from urllib.parse import urlparse
 from urllib.request import urlopen, Request
+from tempfile import NamedTemporaryFile
+
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from django.core.files import File
-from tempfile import NamedTemporaryFile
 import tinify
 
 logger = logging.getLogger('imagestore')
@@ -34,7 +35,7 @@ def optimize(data):
 
 
 class Image(models.Model):
-    """ Stores the details of an image. Enable compression and cache """
+    """ Stores the details of an image. Enables compression and cache """
 
     def generate_path(self, url):
         path = "images/"

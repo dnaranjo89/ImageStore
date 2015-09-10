@@ -1,17 +1,23 @@
 import logging
-import csv, io
+import csv
+import io
 import hashlib
 from urllib.error import URLError
-from django.db import models
 from urllib.request import urlopen
-from django.http import HttpResponse
+
+from django.db import models
 from rest_framework.exceptions import ValidationError
+
 from api.models.image import Image
 
 logger = logging.getLogger('imagestore')
 
 
 def calculate_hash(url):
+    """ Calculate the hash of a file
+    :param url: URL where the file is located
+    :return: The hash of the file
+    """
     with urlopen(url) as file_to_check:
         # read contents of the file
         data = file_to_check.read()
@@ -21,6 +27,10 @@ def calculate_hash(url):
 
 
 class CSVFile(models.Model):
+    """
+    Manages a image file storage.
+    Allows to parses a CSV file and download, compress and cache its content
+    """
     url = models.URLField()
     hash = models.CharField(max_length=120)
 
@@ -28,12 +38,28 @@ class CSVFile(models.Model):
         return self.url
 
     def generate_hash(self):
+        """ Generate the hash of the CSV file which later on will be used to check whether the file has changed """
         self.hash = calculate_hash(self.url)
 
     def has_changed(self):
+        """ Check if the CSV file has changed since the last time it was downloaded """
         return calculate_hash(self.url) != self.hash
 
+    def remove_unused_images(self, new_images):
+        """ Remove from the DB all the entries that belong to the current CSV file but are not in the 'new_images' lists
+        :param new_images: The list of images that should remain in th DB
+        """
+        # Get the images stored referenced by the current CSV file
+        stored_images = Image.objects.filter(csv_id=self)
+        for stored_image in stored_images:
+            if stored_image not in new_images:
+                stored_image.delete()
+
     def parse_row(self, row):
+        """
+        Given a CSV row, parse it to generate an Image instance.
+        If it pass the validation it will be stored in the server
+        """
         if len(row) < 3:
             raise ValidationError("The row has less than 3 fields")
 
@@ -48,14 +74,8 @@ class CSVFile(models.Model):
             image.validate_and_cache()
         return image
 
-    def remove_unused_images(self, new_images):
-        # Get the images stored referenced by the current CSV file
-        stored_images = Image.objects.filter(csv_id=self)
-        for stored_image in stored_images:
-            if stored_image not in new_images:
-                stored_image.delete()
-
     def load_csv(self):
+        """ Download and process the CSV file stored in 'self.url' """
         try:
             response = urlopen(self.url)
             next(response)  # skip header row
