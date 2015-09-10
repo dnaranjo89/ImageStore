@@ -22,12 +22,11 @@ def optimize(data):
     except tinify.AccountError as e:
         # This exception may rise, since a Free account is being used (only 500 requests/month)
         logger.error("There is a problem with the TinyPNG Account: {0}".format(e))
-        return data
     except tinify.ServerError as e:
         logger.error("There seem to be problems in the compression server: {0}".format(e))
-        return data
     except Exception as e:
         logger.error("The image could not be compressed: {0}".format(e))
+    finally:
         return data
 
 
@@ -83,8 +82,9 @@ class Image(models.Model):
             file_ext = type_file.replace('image/', '')
         self.filename = filename + file_ext
         source_data = response.read()
+        # Compress the image
         source_data = optimize(source_data)
         img_temp.write(source_data)
         img_temp.flush()
-
+        # Save the image in the server
         self.image.save(self.url, File(img_temp))

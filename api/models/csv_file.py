@@ -1,9 +1,11 @@
 import logging
 import csv, io
 import hashlib
+from urllib.error import URLError
 from django.db import models
 from urllib.request import urlopen
 from django.http import HttpResponse
+from rest_framework.exceptions import ValidationError
 from api.models.image import Image
 
 logger = logging.getLogger('imagestore')
@@ -30,8 +32,7 @@ class CSVFile(models.Model):
 
     def parse_row(self, row):
         if len(row) < 3:
-            # TODO Throw exception
-            return False
+            raise ValidationError("The row has less than 3 fields")
 
         title = row[0]
         description = row[1]
@@ -54,13 +55,13 @@ class CSVFile(models.Model):
     def load_csv(self):
         try:
             response = urlopen(self.url)
-        except Exception:
-            raise Exception("Imposible to load the CSV file: {0}".format(self.url))
-        #TODO check if the CSV file has a header
-        try:
             next(response)  # skip header row
+        except URLError:
+            logger.error("Impossible to load the CSV file: {0}".format(self.url))
+        except StopIteration:
+            logger.error("Couldn't load the CSV file. The file it's empty. (URL: {0}".format(self.url))
+        else:
             datareader = csv.reader(io.TextIOWrapper(response), delimiter=",")
-
             # Parse each row
             new_images = []
             total_urls = 0
@@ -70,12 +71,13 @@ class CSVFile(models.Model):
                     image = self.parse_row(row)
                     image.save()
                     new_images.append(image)
+                except ValidationError as e:
+                    logger.error("The image didn't pass the validation: {0}".format(e))
                 except Exception as e:
-                    logger.error("Impossible to load image: {0}".format(e))
+                    logger.error("Impossible to load the image: {0}".format(e))
+
             self.generate_hash()
             self.remove_unused_images(new_images)
             logger.info("Images have been fetched: {0}/{1}.".format(len(new_images), total_urls))
-        except StopIteration:
-            logger.error("Couldn't load the CSV file. The file it's empty. (URL: {0}".format(self.url))
-        # Save to store the hash of the file
-        self.save()
+            # Save to store the hash of the file
+            self.save()
