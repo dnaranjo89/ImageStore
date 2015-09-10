@@ -80,7 +80,7 @@ class Image(models.Model):
         # If the file doesn't have a extension, find it out from the header
         if file_ext == '':
             file_ext = type_file.replace('image/', '')
-        self.filename = filename + file_ext
+        self.filename = "{0}.{1}".format(filename, file_ext)
         source_data = response.read()
         # Compress the image
         source_data = optimize(source_data)
