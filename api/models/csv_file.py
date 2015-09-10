@@ -77,5 +77,5 @@ class CSVFile(models.Model):
             logger.info("Images have been fetched: {0}/{1}.".format(len(new_images), total_urls))
         except StopIteration:
             logger.error("Couldn't load the CSV file. The file it's empty. (URL: {0}".format(self.url))
-
-
+        # Save to store the hash of the file
+        self.save()

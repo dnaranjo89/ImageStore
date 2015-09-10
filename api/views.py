@@ -17,8 +17,6 @@ def add_csv_file(url):
     csv_file.save()
     # Load and store the images contained in the CSV file
     csv_file.load_csv()
-    # Save to store the hash of the file
-    csv_file.save()
 
 
 def populate(request):
