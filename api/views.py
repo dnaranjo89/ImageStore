@@ -24,7 +24,7 @@ def populate(request):
     logger.debug("Load CSV files")
     csv_file_urls = [
         "https://docs.google.com/spreadsheets/d/1cvSn15RCK8n-A-284FSquBxMd7GHsY9H2ysXMt6QUZc/export?format=csv&id=1cvSn15RCK8n-A-284FSquBxMd7GHsY9H2ysXMt6QUZc",
-        #"https://docs.google.com/spreadsheets/d/1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM/export?format=csv&id=1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM",
+        "https://docs.google.com/spreadsheets/d/1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM/export?format=csv&id=1QuGtCGCYp3RpVWlEHUD4HK42A6a5hYZSufE8RxMwfpM",
     ]
     for url in csv_file_urls:
         add_csv_file(url)
@@ -33,13 +33,11 @@ def populate(request):
 
 def check_updates():
     logger.info("check updates")
-    stored_images = []
     csv_files = CSVFile.objects.all()
     for file in csv_files:
         if file.has_changed():
             logger.info("The following file has changed since last time. Fetching changes. (URL: {0})".format(file.url))
-            new_images = file.load_csv()
-            stored_images.append(new_images)
+            file.load_csv()
 
 
 @api_view(['GET', ])
