@@ -2,5 +2,6 @@ __pycache__/
 *.py[cod]
 .idea/
 media/
+imagestore_env/
 *.bat
 *.sqlite3
