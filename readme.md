@@ -1,3 +1,11 @@
+## Setup the server
+1. Sync the DB and create a superuser
+2. Populate the DB with some CSV files. There are two ways to do it:
+ * From the admin panel
+ * Make a get request to `http://127.0.0.1:8000/populate` (only available for testing purposes). It adds two example CSV files. _Avoid using chrome to access the URL since it makes one query when url is type and another when it's submitted so it may create duplicates_
+
+**Note:** If the CSV files are added from the admin panel, the first time the images are requested it will take more time since all of them need to be cached by first time.
+
 ## How to use the API
 To use the API simply make a GET request to the following URL:
 
@@ -6,8 +14,13 @@ To use the API simply make a GET request to the following URL:
 It is possible to force the server to check if there are changes in the sources and bring their content to the server.
 * Force server to check updates `http://127.0.0.1:8000/images?f`
 
+**Only the entries that can be succesfully load and pass the validation will be returned by the API to the clients.** A log is generated with the image errors to be fixed by the suppliers (see the _Logs_ secction below)
+
 ### Output formats
 Beside the required JSON, the API also can be served with a HTML browsable interface. To select between formats use the sufixs `.api` and `.json`
+
+### Adding more CSV files
+There is no limit for the number of source files. The can be added and removed from the admin panel (for that is needed to create a superuser)
 
 Examples:
 * `http://127.0.0.1:8000/images.api`
