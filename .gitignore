@@ -3,5 +3,6 @@ __pycache__/
 .idea/
 media/
 imagestore_env/
+logs/
 *.bat
 *.sqlite3
