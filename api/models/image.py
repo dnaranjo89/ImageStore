@@ -61,16 +61,16 @@ class Image(models.Model):
         If the object pass the validation, the image is downloaded and cached.
         """
         if not self.title:
-            raise ValidationError('The image has no title, which is required')
+            raise ValidationError('The image has no title, which is required. (URL: {0})'.format(self.url))
         if not self.url:
-            raise ValidationError('The URL field is empty.')
+            raise ValidationError('The URL field is empty (Image title: {0})'.format(self.title))
 
         # Check that the URL is valid
         val = URLValidator()
         try:
             val(self.url)
         except ValidationError as e:
-            raise ValidationError('The URL is not correctly formatted. Enter a valid URL')
+            raise ValidationError('The URL is not correctly formatted. Enter a valid URL (URL: {0})'.format(self.url))
 
         # Store the image in the server
         self.cache_image()
@@ -83,7 +83,7 @@ class Image(models.Model):
         response = urlopen(request)
         type_file = dict(response.info()._headers)['Content-Type']
         if 'image' not in type_file:
-            raise ValidationError("The URL does not contains any image. (Content-Type: {0})".format(type))
+            raise ValidationError("The URL does not contains any image. (Content-Type: {0}) (URL: {1})".format(type, self.url))
         # Store the filename with extension
         url_image = urlparse(self.url)
         filename, file_ext = splitext(basename(url_image.path))

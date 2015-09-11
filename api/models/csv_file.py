@@ -7,11 +7,12 @@ from urllib.request import urlopen
 
 from django.db import models
 from django.contrib import admin
-from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 
 from api.models.image import Image
 
 logger = logging.getLogger('imagestore')
+logger_supplier = logging.getLogger('image_supplier')
 
 
 def calculate_hash(url):
@@ -85,8 +86,10 @@ class CSVFile(models.Model):
             self.generate_hash()
             self.save()
         except URLError:
-            logger.error("Impossible to load the CSV file: {0}".format(self.url))
+            logger_supplier.info("Impossible to load the CSV file: {0}".format(self.url))
+            logger.info("Impossible to load the CSV file: {0}".format(self.url))
         except StopIteration:
+            logger_supplier.info("Couldn't load the CSV file. The file it's empty. (URL: {0}".format(self.url))
             logger.error("Couldn't load the CSV file. The file it's empty. (URL: {0}".format(self.url))
         else:
             datareader = csv.reader(io.TextIOWrapper(response), delimiter=",")
@@ -97,12 +100,15 @@ class CSVFile(models.Model):
                 total_urls += 1
                 try:
                     image = self.parse_row(row)
-                    image.save()
-                    new_images.append(image)
                 except ValidationError as e:
+                    logger_supplier.info("The image didn't pass the validation: {0}".format(e))
                     logger.error("The image didn't pass the validation: {0}".format(e))
                 except Exception as e:
+                    logger_supplier.info("Impossible to load the image: {0}".format(e))
                     logger.error("Impossible to load the image: {0}".format(e))
+                else:
+                    image.save()
+                    new_images.append(image)
 
             self.remove_unused_images(new_images)
             logger.info("Images have been fetched: {0}/{1}.".format(len(new_images), total_urls))

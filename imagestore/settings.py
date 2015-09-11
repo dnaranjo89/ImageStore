@@ -105,9 +105,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-
+########## LOGGING CONFIGURATION
+BASE_LOG_PATH = os.path.join(BASE_DIR, 'logs/')
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -125,7 +126,8 @@ LOGGING = {
             'datefmt': '%Y%m%d %H:%M:%S',
         },
         'simple': {
-            'format': '%(levelname)s %(message)s'
+            'format': '[%(asctime)s] %(levelname)s %(message)s',
+            'datefmt': '%d/%m/%Y %H:%M:%S',
         },
     },
     'handlers': {
@@ -140,6 +142,12 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'standard',
         },
+        'suppliers_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'formatter': 'simple',
+            'filename': BASE_LOG_PATH + 'image_suppliers_log.txt',
+        },
     },
     'loggers': {
         'django.request': {
@@ -150,6 +158,11 @@ LOGGING = {
         'imagestore': {
             'handlers': ['console'],
             'level': 'DEBUG',
+            'propagate': False,
+        },
+        'image_supplier': {
+            'handlers': ['suppliers_file'],
+            'level': 'INFO',
             'propagate': False,
         },
     }
