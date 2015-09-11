@@ -44,5 +44,7 @@ The server is running, but it does not cache the images:
 * https://quiet-wave-8914.herokuapp.com/images.json (The first time run it's a bit slower since it's a free account in Heroku and the server is sleeping when not used)
 
 The solutions could be:
-* Simply using a S3 to store the images. I've never used any so far but I'm sure Amazon S3 it's really easy to use. I'm not sure if setting the production server is something that is expected for me to do but if so, please let me know and I will gladly do it.
 * Serving it from a VPS where you are free to store your content. But this option would requite more effort.
+* Simply using a S3 (i.e. Amazon S3) to store the images.
+
+_I'm not sure if setting the production server is something that is expected for me to do but if so, please let me know and I will gladly do it._
