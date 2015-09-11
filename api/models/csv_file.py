@@ -79,7 +79,11 @@ class CSVFile(models.Model):
         """ Download and process the CSV file stored in 'self.url' """
         try:
             response = urlopen(self.url)
-            next(response)  # skip header row
+            # Skip header
+            next(response)
+            # Generate hash and store it in the DB
+            self.generate_hash()
+            self.save()
         except URLError:
             logger.error("Impossible to load the CSV file: {0}".format(self.url))
         except StopIteration:
@@ -100,11 +104,9 @@ class CSVFile(models.Model):
                 except Exception as e:
                     logger.error("Impossible to load the image: {0}".format(e))
 
-            self.generate_hash()
             self.remove_unused_images(new_images)
             logger.info("Images have been fetched: {0}/{1}.".format(len(new_images), total_urls))
             # Save to store the hash of the file
-            self.save()
 
 
 class CSVFileAdmin(admin.ModelAdmin):
